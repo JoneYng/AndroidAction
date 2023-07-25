@@ -15,6 +15,9 @@ jobs:
     # 指定当前任务运行的环境。在 ubuntu-latest 系统下运行
     runs-on: ubuntu-latest
 
+    env:
+      OUTPUT_DIR: app/build/outputs/apk/debug
+      FIR_TOKEN: ${{ secrets.FIR_TOKEN }}
     # 指定当前任务的步骤列表。比如当前示例中，我们有多个任务，分别如下：
     # 拉代码
     # 设置 jdk 与 Gradle 环境
@@ -34,4 +37,16 @@ jobs:
     - name: Build with Gradle
       run: ./gradlew assembleDebug
 
-
+    - uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: '3.0'
+        bundler-cache: true
+      - name: Install fir-cli
+        continue-on-error: true
+        run: gem install fir-cli
+      - name: Upload to Fir
+        continue-on-error: true
+        id: fir-upload
+        run: |
+          fir login $FIR_TOKEN
+          fir publish $OUTPUT_DIR/*.apk
